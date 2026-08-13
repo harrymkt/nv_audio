@@ -1,0 +1,40 @@
+#include "nv_audio/main.nvgt"
+#include "speech.nvgt"
+nv_audio p;
+void main() {
+	set_sound_global_hrtf(true);
+	p.behind_pitch_decrease = 2.5;
+	show_window("NVGT 3d sound demo");
+	nv_audio_positional@ s = p.play("music.ogg", vector(0, 0, 0), looping = true);
+	if (@s == null) {
+		alert("Error", "The sound could not be loaded");
+		return;
+	}
+	alert("Info", "Arrows to move, Q and E to change direction, F to report the current direction.");
+	int x = 0;
+	int y = 0;
+	int z = 0;
+	double angle = 0;
+	while (true) {
+		if (key_pressed(KEY_ESCAPE))
+			exit();
+		if (key_pressed(KEY_LEFT))
+			x--;
+		if (key_pressed(KEY_RIGHT))
+			x++;
+		if (key_pressed(KEY_DOWN))
+			y--;
+		if (key_pressed(KEY_UP))
+			y++;
+		if (key_pressed(KEY_PAGEDOWN))
+			z--;
+		if (key_pressed(KEY_PAGEUP))
+			z++;
+		if (key_pressed(KEY_Q)) angle = turnleft(angle, 45);
+		if (key_pressed(KEY_E)) angle = turnright(angle, 45);
+		if (key_pressed(KEY_F)) speak(angle);
+		if (p.rotation != angle) p.rotation = angle;
+		p.listener = vector(x, y, z);
+		wait(5);
+	}
+}

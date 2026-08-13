@@ -1,0 +1,77 @@
+name: Auto-Submit to Community Bucket
+env:
+  bucket_repo: "harrymkt/nvgtpm_bucket_main"
+  app_name: "nv_audio"
+on:
+  #push:
+    #branches: [main, master]
+    # Triggers dynamically based on source paths
+    #paths: ["nv_audio.json"]
+  workflow_dispatch:
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Checkout Bucket Upstream
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.bucket_repo }}
+          token: ${{ secrets.PAT }}
+          path: bucket
+      - name: Install Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+      - name: Build
+        id: builder
+        run: |
+          python ci.py
+      - name: Add JSON into Bucket Directory
+        run: |
+          # Dynamically extract the directory path from the target file path
+          TARGET_DIR=$(dirname "bucket/json/${{ env.app_name }}.json")
+          mkdir -p "$TARGET_DIR"
+          # Copy the file
+          cp "${{ env.app_name }}.json" "$TARGET_DIR/${{ env.app_name }}.json"
+      - name: Delete Existing Release and Tag
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: |
+          TAG_NAME="module"
+          
+          # Delete existing release (if it exists)
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Deleting existing release: $TAG_NAME"
+            gh release delete "$TAG_NAME" --yes --cleanup-tag
+          else
+            echo "No existing release found for tag: $TAG_NAME"
+          fi
+      - name: Publish Automated Modules Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            *.zip
+          draft: false
+          prerelease: false
+          token: ${{ secrets.PAT }}
+          tag_name: "module"
+          body: "${{ steps.builder.outputs.pr_body }}"
+      - name: Commit and Push
+        run: |
+          cd bucket
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git add .
+          
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "${{ env.app_name }}: Update to Version ${{ steps.builder.outputs.version }}" \
+              -m "${{ steps.builder.outputs.pr_body }}"
+            
+            git push
+          else
+            echo "No changes detected to commit."
+          fi

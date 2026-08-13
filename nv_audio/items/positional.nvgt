@@ -1,0 +1,117 @@
+class nv_audio_positional: nv_audio_item {
+	int upper_range;
+	int lower_range;
+	int left_range;
+	int right_range;
+	int backward_range;
+	int forward_range;
+	float behind_pitch_decrease = 0.0;
+	vector pv, v, listener;
+	nv_audio_positional(
+		nv_audio@ parent, const string &in filename, vector v, bool looping = false, bool persist = false,
+		int left_range = 0, int right_range = 0, int backward_range = 0, int forward_range = 0, int lower_range = 0, int upper_range = 0,
+		const string &in owner = "", const string &in data = ""
+	) {
+		super(@parent, filename, looping, persist, owner, data);
+		this.v = v;
+		this.left_range = left_range;
+		this.right_range = right_range;
+		this.backward_range = backward_range;
+		this.forward_range = forward_range;
+		this.lower_range = lower_range;
+		this.upper_range = upper_range;
+		if (parent.y_is_elevation)
+			this.v = vector(this.v.x, this.v.z, this.v.y);
+		pv = this.v;
+		type = NV_AUDIO_TYPE_POSITIONAL;
+		handle.positioning = AUDIO_POSITIONING_ABSOLUTE;
+		handle.rolloff = parent.rolloff;
+		if (parent.directional_attenuation_factor > 0.0)
+			handle.directional_attenuation_factor = parent.directional_attenuation_factor;
+		set_sound_position(true);
+	}
+	bool get_in_earshot() const property {
+		if (parent.max_distance <= 0)
+			return true;
+		else if (get_3d_distance(parent.listener.x, parent.listener.y, parent.listener.z, pv.x, pv.y, pv.z) > parent.max_distance)
+			return false;
+		return true;
+	}
+	bool play(bool wait = false, int pan = 0, float pitch = 100, double volume = 0) {
+		if (!in_earshot)
+			return false;
+		if (!loaded)
+			load();
+		this.pitch = pitch;
+		set_sound_position(true);
+		return nv_audio_item::play(wait, pan, 100, volume);
+	}
+	void set_sound_position(bool force = false) {
+		float delta_left = v.x - left_range;
+		float delta_right = v.x + right_range;
+		float delta_backward = v.y - backward_range;
+		float delta_forward = v.y + forward_range;
+		float delta_lower = v.z - lower_range;
+		float delta_upper = v.z + upper_range;
+		vector sound_pos(parent.listener.x, parent.listener.y, parent.listener.z);
+		if (parent.listener.x < delta_left)
+			sound_pos.x = delta_left;
+		else if (parent.listener.x >= delta_right)
+			sound_pos.x = delta_right;
+		if (parent.listener.y < delta_backward)
+			sound_pos.y = delta_backward;
+		else if (parent.listener.y >= delta_forward)
+			sound_pos.y = delta_forward;
+		if (parent.listener.z < delta_lower)
+			sound_pos.z = delta_lower;
+		else if (parent.listener.z >= delta_upper)
+			sound_pos.z = delta_upper;
+		// Calculate listener-relative position and rotate by listener rotation
+		sound_pos -= parent.listener;
+		sound_pos = rotate(sound_pos, vector(0, 0), calculate_theta(parent.rotation));
+		if (parent.y_is_elevation) {
+			float temp = sound_pos.y;
+			sound_pos.y = sound_pos.z;
+			sound_pos.z = temp;
+		}
+		// Update cached state and set 3D position
+		if (sound_pos != pv || listener != parent.listener || force) {
+			listener = parent.listener;
+			pv = sound_pos;
+			if (loaded) {
+				handle.spatialization_enabled = sound_pos != parent.listener;
+				handle.set_position_3d(sound_pos);
+			}
+		}
+		// Apply pitch (with behind_pitch_decrease if enabled)
+		// rotated_pos already has rotation and y_is_elevation swap applied
+		if (loaded) {
+			float effective_pitch_decrease = behind_pitch_decrease > 0 ? behind_pitch_decrease : parent.behind_pitch_decrease;
+			float final_pitch = pitch;
+			if (effective_pitch_decrease > 0) {
+				// After rotation and y_is_elevation swap:
+				// - Y is up/down (if y_is_elevation) or forward/backward
+				// - Z is forward/backward (if y_is_elevation) or up/down
+				if (parent.y_is_elevation) {
+					if (sound_pos.y < 0) final_pitch -= effective_pitch_decrease; // below
+					if (sound_pos.z < 0) final_pitch -= effective_pitch_decrease; // behind
+				} else {
+					if (sound_pos.y < 0) final_pitch -= effective_pitch_decrease; // behind
+					if (sound_pos.z < 0) final_pitch -= effective_pitch_decrease; // below
+				}
+			}
+			handle.pitch = final_pitch;
+			handle.rolloff = parent.rolloff;
+			handle.directional_attenuation_factor = parent.directional_attenuation_factor;
+		}
+	}
+	void set_position(vector v) property {
+		this.v = vector(v.x, v.y, v.z);
+		if (parent.y_is_elevation)
+			this.v = vector(this.v.x, this.v.z, this.v.y);
+		set_sound_position();
+	}
+	vector get_position() const property {
+		return v;
+	}
+}

@@ -1,0 +1,53 @@
+abstract class nv_audio_item {
+	int type;
+	nv_audio@ parent;
+	bool persist;
+	bool looping;
+	bool played = false;
+	bool loaded = false;
+	string filename;
+	sound handle;
+	string owner;
+	string data;
+	float pitch = 100.0;
+	nv_audio_item(nv_audio@ parent, const string &in filename, bool looping = false, bool persist = false, const string &in owner = "", const string &in data = "") {
+		@this.parent = parent;
+		this.filename = filename;
+		this.looping = looping;
+		if (looping)
+			this.persist = true;
+		else
+			this.persist = persist;
+		this.owner = owner;
+		this.data = data;
+	}
+	bool play(bool wait = false, int pan = 0, float pitch = 100, double volume = 0) {
+		if (!loaded)
+			load();
+		if (loaded) {
+			if (pan != 0)
+				handle.pan = pan;
+			if (volume != 0)
+				handle.volume = volume;
+			if (pitch != 100) {
+				this.pitch = pitch;
+				handle.pitch = pitch;
+			}
+			bool result = looping ? handle.play_looped() : (wait ? handle.play_wait() : handle.play());
+			if (!looping)
+				played = true;
+			return result;
+		}
+		return false;
+	}
+	int opCmp(const nv_audio_item@other) const {
+		if (@other == @this) return 0;
+		return -1;
+	}
+	void load() {
+		if (!loaded)
+			loaded = (data.empty() ? handle.load(filename) : handle.load_memory(data));
+		if (loaded)
+			handle.set_mixer(@parent.mix);
+	}
+}

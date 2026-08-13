@@ -1,0 +1,160 @@
+#include "base_item.nvgt"
+#include "items/*.nvgt" /**/
+#include "rotation.nvgt"
+enum nv_audio_type {
+	NV_AUDIO_TYPE_STATIONARY = 0,
+	NV_AUDIO_TYPE_POSITIONAL
+}
+class nv_audio {
+	float rolloff = 0.5;
+	float directional_attenuation_factor = 1;
+	float behind_pitch_decrease = 0.0;
+	float s_rotation;
+	int max_distance = 0;
+	bool y_is_elevation = false;
+	nv_audio_item@[] items();
+	mixer@ mix;
+	protected vector _listener_pos;
+	nv_audio(mixer@ mix = sound_default_mixer) {
+		if (@mix != null)
+			@this.mix = @mix;
+		else
+			@this.mix = mixer();
+	}
+	nv_audio_stationary@ play(const string &in filename, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, int pan = 0, float pitch = 100, double volume = 0, const string &in owner = "", const string &in data = "") {
+		clean_sounds();
+		nv_audio_stationary s(this, filename, looping, persist, owner, data);
+		if (immediate)
+			s.play(wait, pan, pitch, volume);
+		else
+			s.load();
+		items.insert_last(@s);
+		return @s;
+	}
+	nv_audio_positional@ play(
+		const string &in filename, vector v, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, int pan = 0, float pitch = 100, double volume = 0,
+		int left_range = 0, int right_range = 0, int backward_range = 0, int forward_range = 0, int lower_range = 0, int upper_range = 0, 
+		const string &in owner = "", const string &in data = ""
+	) {
+		clean_sounds();
+		nv_audio_positional s(this, filename, v, looping, persist, left_range, right_range, backward_range, forward_range, lower_range, upper_range, owner, data);
+		if (immediate)
+			s.play(wait, pan, pitch, volume);
+		else
+			s.load();
+		items.insert_last(@s);
+		return @s;
+	}
+	nv_audio_item@[] get_items(const string &in owner) const {
+		nv_audio_item@[] ret;
+		for (uint i = 0; i < this.items.length(); i++) {
+			if (this.items[i].owner == owner) ret.insert_last(@this.items[i]);
+		}
+		return ret;
+	}
+	bool update_sounds(const string &in owner, vector position) {
+		nv_audio_item@[] items = this.get_items(owner);
+		if (items.length() <= 0) return false;
+		bool updated = false;
+		for (uint i = 0; i < items.length(); i++) {
+			if (items[i].type != NV_AUDIO_TYPE_POSITIONAL) continue;
+			nv_audio_positional@ snd = cast < nv_audio_positional@ > (items[i]);
+			if (@snd != null) {
+				snd.position = position;
+				updated = true;
+			}
+		}
+		if (updated) update_sound_positions();
+		return updated;
+	}
+	void update_sound_positions(bool force = false) {
+		clean_sounds();
+		for (uint i = 0; i < items.length(); i++) {
+			if (items[i].type == NV_AUDIO_TYPE_POSITIONAL) {
+				nv_audio_positional@ snd = cast < nv_audio_positional@ > (items[i]);
+				if (snd.in_earshot) {
+					if (!snd.handle.playing and !snd.handle.paused and !snd.played)
+						snd.play();
+					snd.set_sound_position(force);
+				} else {
+					if (snd.handle.playing)
+						snd.handle.stop();
+					snd.handle.close();
+					snd.loaded = false;
+				}
+			}
+		}
+	}
+	bool destroy(nv_audio_item@ handle) {
+		if (@handle == null) return false;
+		if (@handle.handle != null and (handle.handle.playing or handle.handle.paused))
+			handle.handle.stop();
+		if (handle.handle.active)
+			handle.handle.close();
+		int i = items.find_by_ref(handle);
+		if (i > -1) {
+			items.remove_at(i);
+			return true;
+		}
+		return false;
+	}
+	int destroy(nv_audio_item@[] handles) {
+		if (handles.length() <= 0) return 0;
+		int count = 0;
+		for (uint i = 0; i < handles.length(); i++) {
+			if (this.destroy(@handles[i])) count++;
+		}
+		return count;
+	}
+	int destroy(const string &in owner) {
+		return this.destroy(this.get_items(owner));
+	}
+	void clean_sounds() {
+		int cleaned = 0;
+		for (uint i = 0; i < items.length(); i++) {
+			if (!items[i].handle.playing and items[i].persist == false) {
+				if (items[i].handle != null and items[i].handle.active)
+					items[i].handle.close();
+				items.remove_at(i);
+				cleaned++;
+			}
+		}
+	}
+	void set_position(vector v) property {
+		listener = v;
+		update_sound_positions();
+	}
+	void set_rotation(float r) property {
+		s_rotation = r;
+		update_sound_positions(true);
+	}
+	float get_rotation() const property {
+		return s_rotation;
+	}
+	bool destroy_all() {
+		return this.destroy(this.items) > 0;
+	}
+	void pause_all() {
+		for (uint i = 0; i < this.items.length(); i++) {
+			if (@this.items[i].handle != null and this.items[i].handle.playing)
+				this.items[i].handle.pause();
+		}
+	}
+	void resume_all() {
+		for (uint i = 0; i < this.items.length(); i++) {
+			if (this.items[i].handle != null and this.items[i].handle.paused)
+				this.items[i].play();
+		}
+	}
+	void set_listener(vector v) property {
+		_listener_pos = vector(v.x, v.y, v.z);
+		if (y_is_elevation)
+			_listener_pos = vector(_listener_pos.x, _listener_pos.z, _listener_pos.y);
+		// Set audio engine listener to origin since we pass rotated listener-relative coordinates
+		sound_set_listener_position(vector(0, 0, 0));
+		update_sound_positions();
+	}
+	vector get_listener() const property {
+		return _listener_pos;
+	}
+}
