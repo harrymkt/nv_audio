@@ -9,9 +9,10 @@ abstract class nv_audio_item {
 	sound handle;
 	string owner;
 	string data;
-	float pitch = 100.0;
+	float pan = 0;
+	double volume = 0, pitch = 100;
 	pack_file@ pack = null;
-	nv_audio_item(int type, nv_audio@ parent, const string &in filename, bool looping = false, bool persist = false, const string &in owner = "", const string &in data = "") {
+	nv_audio_item(int type, nv_audio@ parent, const string &in filename, bool looping = false, bool persist = false, float pan = 0, double volume = 0, double pitch = 100, const string &in owner = "", const string &in data = "") {
 		this.type = type;
 		@this.parent = parent;
 		this.filename = filename;
@@ -22,19 +23,17 @@ abstract class nv_audio_item {
 			this.persist = persist;
 		this.owner = owner;
 		this.data = data;
+		this.pan = pan;
+		this.volume = volume;
+		this.pitch = pitch;
 	}
-	bool play(bool wait = false, int pan = 0, float pitch = 100, double volume = 0) {
+	bool play(bool wait = false) {
 		if (!loaded)
 			load();
 		if (loaded) {
-			if (pan != 0)
-				handle.pan = pan;
-			if (volume != 0)
-				handle.volume = volume;
-			if (pitch != 100) {
-				this.pitch = pitch;
-				handle.pitch = pitch;
-			}
+			handle.pan = pan;
+			handle.volume = volume;
+			handle.pitch = pitch;
 			bool result = looping ? handle.play_looped() : (wait ? handle.play_wait() : handle.play());
 			if (!looping)
 				played = true;
@@ -56,5 +55,13 @@ abstract class nv_audio_item {
 		}
 		if (loaded)
 			handle.set_mixer(@parent.mix);
+	}
+	void set_start_values(float pan, double volume, double pitch) {
+		this.pan = pan;
+		this.volume = volume;
+		this.pitch = pitch;
+		handle.pan = pan;
+		handle.volume = volume;
+		handle.pitch = pitch;
 	}
 }

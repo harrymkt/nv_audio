@@ -8,11 +8,11 @@ class nv_audio_positional: nv_audio_item {
 	float behind_pitch_decrease = 0.0;
 	vector pv, v, listener;
 	nv_audio_positional(
-		nv_audio@ parent, const string &in filename, vector v, bool looping = false, bool persist = false,
+		nv_audio@ parent, const string &in filename, vector v, bool looping = false, bool persist = false, float pan = 0, double volume = 0, double pitch = 100,
 		int left_range = 0, int right_range = 0, int backward_range = 0, int forward_range = 0, int lower_range = 0, int upper_range = 0,
 		const string &in owner = "", const string &in data = ""
 	) {
-		super(NV_AUDIO_TYPE_POSITIONAL, @parent, filename, looping, persist, owner, data);
+		super(NV_AUDIO_TYPE_POSITIONAL, @parent, filename, looping, persist, pan, volume, pitch, owner, data);
 		this.v = v;
 		this.left_range = left_range;
 		this.right_range = right_range;
@@ -36,14 +36,13 @@ class nv_audio_positional: nv_audio_item {
 			return false;
 		return true;
 	}
-	bool play(bool wait = false, int pan = 0, float pitch = 100, double volume = 0) {
+	bool play(bool wait = false) {
 		if (!in_earshot)
 			return false;
 		if (!loaded)
 			load();
-		this.pitch = pitch;
 		set_sound_position(true);
-		return nv_audio_item::play(wait, pan, 100, volume);
+		return nv_audio_item::play(wait);
 	}
 	void set_sound_position(bool force = false) {
 		float delta_left = v.x - left_range;

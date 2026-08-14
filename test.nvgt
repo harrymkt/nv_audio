@@ -32,6 +32,12 @@ void test_run() {
 			z++;
 		if (key_pressed(KEY_Q)) angle = turnleft(angle, 45);
 		if (key_pressed(KEY_E)) angle = turnright(angle, 45);
+		if (key_pressed(KEY_HOME)) {
+			s.set_start_values(s.handle.pan, s.handle.volume, s.handle.pitch + 1);
+		}
+		if (key_pressed(KEY_I)) {
+			speak("Volume is " + s.volume + ", pitch " + s.pitch);
+		}
 		if (key_pressed(KEY_F)) speak(angle);
 		if (key_pressed(KEY_C)) speak(x + ", " + y + ", " + z);
 		if (p.rotation != angle) p.rotation = angle;

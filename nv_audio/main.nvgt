@@ -23,42 +23,42 @@ class nv_audio {
 			@this.mix = mixer();
 		@this.pack = @pack;
 	}
-	nv_audio_stationary@ play(const string &in filename, pack_file@ pack, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, int pan = 0, float pitch = 100, double volume = 0, const string &in owner = "", const string &in data = "") {
+	nv_audio_stationary@ play(const string &in filename, pack_file@ pack, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, float pan = 0, double volume = 0, double pitch = 100, const string &in owner = "", const string &in data = "") {
 		clean_sounds();
-		nv_audio_stationary s(this, filename, looping, persist, owner, data);
+		nv_audio_stationary s(this, filename, looping, persist, pan, volume, pitch, owner, data);
 		@s.pack = @pack;
 		if (immediate)
-			s.play(wait, pan, pitch, volume);
+			s.play(wait);
 		else
 			s.load();
 		items.insert_last(@s);
 		return @s;
 	}
-	nv_audio_stationary@ play(const string &in filename, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, int pan = 0, float pitch = 100, double volume = 0, const string &in owner = "", const string &in data = "") {
-		return play(filename, @pack, looping, persist, wait, immediate, pan, pitch, volume, owner, data);
+	nv_audio_stationary@ play(const string &in filename, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, float pan = 0, double volume = 0, double pitch = 100, const string &in owner = "", const string &in data = "") {
+		return play(filename, @pack, looping, persist, wait, immediate, pan, volume, pitch, owner, data);
 	}
 	nv_audio_positional@ play(
-		const string &in filename, pack_file@ pack, vector v, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, int pan = 0, float pitch = 100, double volume = 0,
+		const string &in filename, pack_file@ pack, vector v, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, float pan = 0, double volume = 0, double pitch = 100,
 		int left_range = 0, int right_range = 0, int backward_range = 0, int forward_range = 0, int lower_range = 0, int upper_range = 0, 
 		const string &in owner = "", const string &in data = ""
 	) {
 		clean_sounds();
-		nv_audio_positional s(this, filename, v, looping, persist, left_range, right_range, backward_range, forward_range, lower_range, upper_range, owner, data);
+		nv_audio_positional s(this, filename, v, looping, persist, pan, volume, pitch, left_range, right_range, backward_range, forward_range, lower_range, upper_range, owner, data);
 		@s.pack = @pack;
 		if (immediate)
-			s.play(wait, pan, pitch, volume);
+			s.play(wait);
 		else
 			s.load();
 		items.insert_last(@s);
 		return @s;
 	}
 	nv_audio_positional@ play(
-		const string &in filename, vector v, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, int pan = 0, float pitch = 100, double volume = 0,
+		const string &in filename, vector v, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, float pan = 0, double volume = 0, double pitch = 100,
 		int left_range = 0, int right_range = 0, int backward_range = 0, int forward_range = 0, int lower_range = 0, int upper_range = 0,
 		const string &in owner = "", const string &in data = ""
 	) {
 		return play(
-			filename, @pack, v, looping, persist, wait, immediate, pan, pitch, volume,
+			filename, @pack, v, looping, persist, wait, immediate, pan, volume, pitch,
 			left_range, right_range, backward_range, forward_range, lower_range, upper_range, 
 			owner, data
 		);

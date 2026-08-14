@@ -1,5 +1,5 @@
 class nv_audio_stationary: nv_audio_item {
-	nv_audio_stationary(nv_audio@ parent, const string &infilename, bool looping = false, bool persist = false, const string &in owner = "", const string &in data = "") {
-		super(NV_AUDIO_TYPE_STATIONARY, @parent, filename, looping, persist, owner, data);
+	nv_audio_stationary(nv_audio@ parent, const string &infilename, bool looping = false, bool persist = false, float pan = 0, double volume = 0, double pitch = 100, const string &in owner = "", const string &in data = "") {
+		super(NV_AUDIO_TYPE_STATIONARY, @parent, filename, looping, persist, pan, volume, pitch, owner, data);
 	}
 }
