@@ -10,7 +10,7 @@ void main() {
 		alert("Error", "The sound could not be loaded");
 		return;
 	}
-	alert("Info", "Arrows to move, Q and E to change direction, F to report the current direction.");
+	alert("Info", "Arrows to move, Q and E to change direction, F to report the current direction, C for coordinates.");
 	int x = 0;
 	int y = 0;
 	int z = 0;
@@ -33,6 +33,7 @@ void main() {
 		if (key_pressed(KEY_Q)) angle = turnleft(angle, 45);
 		if (key_pressed(KEY_E)) angle = turnright(angle, 45);
 		if (key_pressed(KEY_F)) speak(angle);
+		if (key_pressed(KEY_C)) speak(x + ", " + y + ", " + z);
 		if (p.rotation != angle) p.rotation = angle;
 		p.listener = vector(x, y, z);
 		wait(5);

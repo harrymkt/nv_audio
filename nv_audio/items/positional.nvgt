@@ -114,4 +114,16 @@ class nv_audio_positional: nv_audio_item {
 	vector get_position() const property {
 		return v;
 	}
+	void update(bool force = false) {
+		if (in_earshot) {
+			if (!handle.playing and !handle.paused and !played)
+				play();
+			set_sound_position(force);
+			return;
+		}
+		if (handle.playing)
+			handle.stop();
+		handle.close();
+		loaded = false;
+	}
 }

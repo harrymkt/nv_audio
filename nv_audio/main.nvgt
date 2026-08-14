@@ -9,7 +9,7 @@ class nv_audio {
 	float rolloff = 0.5;
 	float directional_attenuation_factor = 1;
 	float behind_pitch_decrease = 0.0;
-	float s_rotation;
+	protected double s_rotation;
 	int max_distance = 0;
 	bool y_is_elevation = false;
 	nv_audio_item@[] items();
@@ -58,36 +58,32 @@ class nv_audio {
 		bool updated = false;
 		for (uint i = 0; i < items.length(); i++) {
 			if (items[i].type != NV_AUDIO_TYPE_POSITIONAL) continue;
-			nv_audio_positional@ snd = cast < nv_audio_positional@ > (items[i]);
-			if (@snd != null) {
-				snd.position = position;
-				updated = true;
-			}
+			if (update_sound(items[i], position, false)) updated = true;
 		}
 		if (updated) update_sound_positions();
 		return updated;
+	}
+	bool update_sound(nv_audio_item@ snd, vector cd, bool call_main_update = true) {
+		if (@snd == null || snd.type != NV_AUDIO_TYPE_POSITIONAL) return false;
+		nv_audio_positional@ s = cast<nv_audio_positional@>(snd);
+		if (@s == null) return false;
+		s.position = cd;
+		if (call_main_update) update_sound_positions();
+		return true;
 	}
 	void update_sound_positions(bool force = false) {
 		clean_sounds();
 		for (uint i = 0; i < items.length(); i++) {
 			if (items[i].type == NV_AUDIO_TYPE_POSITIONAL) {
 				nv_audio_positional@ snd = cast < nv_audio_positional@ > (items[i]);
-				if (snd.in_earshot) {
-					if (!snd.handle.playing and !snd.handle.paused and !snd.played)
-						snd.play();
-					snd.set_sound_position(force);
-				} else {
-					if (snd.handle.playing)
-						snd.handle.stop();
-					snd.handle.close();
-					snd.loaded = false;
-				}
+				if (@snd == null) continue;
+				snd.update(force);
 			}
 		}
 	}
 	bool destroy(nv_audio_item@ handle) {
 		if (@handle == null) return false;
-		if (@handle.handle != null and (handle.handle.playing or handle.handle.paused))
+		if (@handle.handle != null && (handle.handle.playing || handle.handle.paused))
 			handle.handle.stop();
 		if (handle.handle.active)
 			handle.handle.close();
@@ -109,40 +105,41 @@ class nv_audio {
 	int destroy(const string &in owner) {
 		return this.destroy(this.get_items(owner));
 	}
-	void clean_sounds() {
+	int clean_sounds() {
 		int cleaned = 0;
 		for (uint i = 0; i < items.length(); i++) {
-			if (!items[i].handle.playing and items[i].persist == false) {
-				if (items[i].handle != null and items[i].handle.active)
+			if (!items[i].handle.playing && items[i].persist == false) {
+				if (items[i].handle != null && items[i].handle.active)
 					items[i].handle.close();
 				items.remove_at(i);
 				cleaned++;
 			}
 		}
+		return cleaned;
 	}
-	void set_position(vector v) property {
-		listener = v;
-		update_sound_positions();
-	}
-	void set_rotation(float r) property {
+	void set_rotation(double r) property {
 		s_rotation = r;
 		update_sound_positions(true);
 	}
-	float get_rotation() const property {
+	double get_rotation() const property {
 		return s_rotation;
+	}
+	void update_listener(vector cd, double rotation) {
+		listener = cd;
+		if (this.rotation != rotation) this.rotation = rotation;
 	}
 	bool destroy_all() {
 		return this.destroy(this.items) > 0;
 	}
 	void pause_all() {
 		for (uint i = 0; i < this.items.length(); i++) {
-			if (@this.items[i].handle != null and this.items[i].handle.playing)
+			if (@this.items[i].handle != null && this.items[i].handle.playing)
 				this.items[i].handle.pause();
 		}
 	}
 	void resume_all() {
 		for (uint i = 0; i < this.items.length(); i++) {
-			if (this.items[i].handle != null and this.items[i].handle.paused)
+			if (this.items[i].handle != null && this.items[i].handle.paused)
 				this.items[i].play();
 		}
 	}
