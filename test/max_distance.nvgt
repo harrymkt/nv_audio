@@ -1,0 +1,6 @@
+#include "../test.nvgt"
+void main() {
+	chdir("..");
+	p.max_distance = 20;
+	test_run();
+}

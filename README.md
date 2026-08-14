@@ -1,7 +1,7 @@
 # NV Audio
 `nv_audio` is a new, redesigned audio and sound management (sound pool) system written in and/or for [NVGT](https://nvgt.dev) scripting game engine.
 
-You can run [test.nvgt](test.nvgt) for basic testing.
+You can run [test.nvgt](test.nvgt) for basic testing. To see more tests, go to the [test directory](test).
 
 ## Notes
 - This is still in development, and should not yet be used in your projects.

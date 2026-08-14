@@ -12,7 +12,7 @@ class nv_audio_positional: nv_audio_item {
 		int left_range = 0, int right_range = 0, int backward_range = 0, int forward_range = 0, int lower_range = 0, int upper_range = 0,
 		const string &in owner = "", const string &in data = ""
 	) {
-		super(@parent, filename, looping, persist, owner, data);
+		super(NV_AUDIO_TYPE_POSITIONAL, @parent, filename, looping, persist, owner, data);
 		this.v = v;
 		this.left_range = left_range;
 		this.right_range = right_range;
@@ -23,7 +23,6 @@ class nv_audio_positional: nv_audio_item {
 		if (parent.y_is_elevation)
 			this.v = vector(this.v.x, this.v.z, this.v.y);
 		pv = this.v;
-		type = NV_AUDIO_TYPE_POSITIONAL;
 		handle.positioning = AUDIO_POSITIONING_ABSOLUTE;
 		handle.rolloff = parent.rolloff;
 		if (parent.directional_attenuation_factor > 0.0)
@@ -33,7 +32,7 @@ class nv_audio_positional: nv_audio_item {
 	bool get_in_earshot() const property {
 		if (parent.max_distance <= 0)
 			return true;
-		else if (get_3d_distance(parent.listener.x, parent.listener.y, parent.listener.z, pv.x, pv.y, pv.z) > parent.max_distance)
+		else if (get_3d_distance(parent.listener.x, parent.listener.y, parent.listener.z, v.x, v.y, v.z) > parent.max_distance)
 			return false;
 		return true;
 	}

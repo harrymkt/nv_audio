@@ -10,7 +10,9 @@ abstract class nv_audio_item {
 	string owner;
 	string data;
 	float pitch = 100.0;
-	nv_audio_item(nv_audio@ parent, const string &in filename, bool looping = false, bool persist = false, const string &in owner = "", const string &in data = "") {
+	pack_file@ pack = null;
+	nv_audio_item(int type, nv_audio@ parent, const string &in filename, bool looping = false, bool persist = false, const string &in owner = "", const string &in data = "") {
+		this.type = type;
 		@this.parent = parent;
 		this.filename = filename;
 		this.looping = looping;
@@ -45,8 +47,13 @@ abstract class nv_audio_item {
 		return -1;
 	}
 	void load() {
-		if (!loaded)
-			loaded = (data.empty() ? handle.load(filename) : handle.load_memory(data));
+		if (!loaded) {
+			if (!data.empty()) loaded = handle.load_memory(data);
+			else {
+				if (@pack == null) loaded = handle.load(filename);
+				else loaded = handle.load(filename, @pack);
+			}
+		}
 		if (loaded)
 			handle.set_mixer(@parent.mix);
 	}

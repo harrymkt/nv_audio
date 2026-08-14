@@ -1,9 +1,9 @@
 #include "nv_audio/main.nvgt"
 #include "speech.nvgt"
 nv_audio p;
-void main() {
+void test_run() {
 	set_sound_global_hrtf(true);
-	p.behind_pitch_decrease = 2.5;
+	p.behind_pitch_decrease = 3.0;
 	show_window("NVGT 3d sound demo");
 	nv_audio_positional@ s = p.play("music.ogg", vector(0, 0, 0), looping = true);
 	if (@s == null) {
@@ -39,3 +39,8 @@ void main() {
 		wait(5);
 	}
 }
+#if_not include
+	void main() {
+		test_run();
+	}
+#endif
