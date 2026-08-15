@@ -1,0 +1,10 @@
+#include "../test.nvgt"
+void main() {
+	chdir("..");
+	p.max_distance = 20;
+	tts_voice v;
+	string text = input_box("Text", "Type the text that should be spoken");
+	if (text == "") exit();
+	string t = v.speak_to_memory(text);
+	test_run(text.length() + ".ogg", t);
+}

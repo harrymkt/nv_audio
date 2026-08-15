@@ -1,10 +1,10 @@
 #include "nv_audio/main.nvgt"
 #include "speech.nvgt"
 nv_audio p;
-void test_run() {
+void test_run(const string &in filename = "music.ogg", const string &in data = "") {
 	set_sound_global_hrtf(true);
 	show_window("NVGT 3d sound demo");
-	nv_audio_positional@ s = p.play("music.ogg", vector(0, 0, 0), looping = true);
+	nv_audio_positional@ s = p.play(filename, vector(0, 0, 0), looping = true, data = data);
 	if (@s == null) {
 		alert("Error", "The sound could not be loaded");
 		return;
