@@ -11,7 +11,7 @@ abstract class nv_audio_item {
 	string data;
 	float pan = 0;
 	double volume = 0, pitch = 100;
-	pack_file@ pack = null;
+	pack_interface@ pack = null;
 	nv_audio_item(int type, nv_audio@ parent, const string &in filename, bool looping = false, bool persist = false, float pan = 0, double volume = 0, double pitch = 100, const string &in owner = "", const string &in data = "") {
 		this.type = type;
 		@this.parent = parent;

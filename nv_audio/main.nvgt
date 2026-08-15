@@ -15,15 +15,15 @@ class nv_audio {
 	nv_audio_item@[] items();
 	mixer@ mix;
 	protected vector _listener_pos;
-	pack_file@ pack;
-	nv_audio(mixer@ mix = sound_default_mixer, pack_file@ pack = cast<pack_file@>(sound_default_pack)) {
+	pack_interface@ pack;
+	nv_audio(mixer@ mix = sound_default_mixer, pack_interface@ pack = cast<pack_interface@>(sound_default_pack)) {
 		if (@mix != null)
 			@this.mix = @mix;
 		else
 			@this.mix = mixer();
 		@this.pack = @pack;
 	}
-	nv_audio_stationary@ play(const string &in filename, pack_file@ pack, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, float pan = 0, double volume = 0, double pitch = 100, const string &in owner = "", const string &in data = "") {
+	nv_audio_stationary@ play(const string &in filename, pack_interface@ pack, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, float pan = 0, double volume = 0, double pitch = 100, const string &in owner = "", const string &in data = "") {
 		clean_sounds();
 		nv_audio_stationary s(this, filename, looping, persist, pan, volume, pitch, owner, data);
 		@s.pack = @pack;
@@ -38,7 +38,7 @@ class nv_audio {
 		return play(filename, @pack, looping, persist, wait, immediate, pan, volume, pitch, owner, data);
 	}
 	nv_audio_positional@ play(
-		const string &in filename, pack_file@ pack, vector v, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, float pan = 0, double volume = 0, double pitch = 100,
+		const string &in filename, pack_interface@ pack, vector v, bool looping = false, bool persist = false, bool wait = false, bool immediate = true, float pan = 0, double volume = 0, double pitch = 100,
 		int left_range = 0, int right_range = 0, int backward_range = 0, int forward_range = 0, int lower_range = 0, int upper_range = 0, 
 		const string &in owner = "", const string &in data = ""
 	) {

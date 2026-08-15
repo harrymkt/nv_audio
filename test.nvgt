@@ -3,18 +3,19 @@
 nv_audio p;
 void test_run() {
 	set_sound_global_hrtf(true);
-	p.behind_pitch_decrease = 3.0;
 	show_window("NVGT 3d sound demo");
 	nv_audio_positional@ s = p.play("music.ogg", vector(0, 0, 0), looping = true);
 	if (@s == null) {
 		alert("Error", "The sound could not be loaded");
 		return;
 	}
+	s.handle.volume = -7;
 	alert("Info", "Arrows to move, Q and E to change direction, F to report the current direction, C for coordinates.");
 	int x = 0;
 	int y = 0;
 	int z = 0;
 	double angle = 0;
+	s.handle.volume = s.volume;
 	while (true) {
 		if (key_pressed(KEY_ESCAPE))
 			exit();
@@ -33,7 +34,7 @@ void test_run() {
 		if (key_pressed(KEY_Q)) angle = turnleft(angle, 45);
 		if (key_pressed(KEY_E)) angle = turnright(angle, 45);
 		if (key_pressed(KEY_HOME)) {
-			s.set_start_values(s.handle.pan, s.handle.volume, s.handle.pitch + 1);
+			s.set_start_values(s.pan, s.volume, s.pitch + 1);
 		}
 		if (key_pressed(KEY_I)) {
 			speak("Volume is " + s.volume + ", pitch " + s.pitch);
@@ -47,6 +48,7 @@ void test_run() {
 }
 #if_not include
 	void main() {
+		p.behind_pitch_decrease = 3.0;
 		test_run();
 	}
 #endif
