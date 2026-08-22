@@ -1,7 +1,7 @@
 #include "../test.nvgt"
 void main() {
 	chdir("..");
-	p.max_distance = 20;
+	p.behind_pitch_decrease = 10;
 	tts_voice v;
 	string text = input_box("Text", "Type the text that should be spoken");
 	if (text == "") exit();

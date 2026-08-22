@@ -1,4 +1,4 @@
-#include "nv_audio/main.nvgt"
+#include "src/nv_audio/main.nvgt"
 #include "speech.nvgt"
 nv_audio p;
 void test_run(const string &in filename = "music.ogg", const string &in data = "") {
